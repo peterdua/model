@@ -9,7 +9,8 @@
 # What I have done so far:
   Currently, I have implemented a simple menu that can create cubes. Then, based on mouse clicks, it selects the cube, and the direction of the cube can be controlled with the keyboard. Additionally, it is possible to export the entire scene with the modified positions.
 
-# Difficulties (The difficulties I've met)
+# Difficulties 
+The difficulties I've met
 
 ## Using Processing to export STL file
 

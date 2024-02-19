@@ -12,11 +12,11 @@
 # Difficulties 
 The difficulties I've met
 
-## Using Processing to export STL file
+### Using Processing to export STL file
 
   I attempted various methods to export STL files, including but not limited to using the ModelBuilderMk2 library, netfabb, HE_Mesh, and writing my own code for printing STL files. However, all attempts were unsuccessful. The issues ranged from the libraries being too outdated and incompatible, to the printed files having significant flaws. Consequently, following the advice of my supervisor, Jon, I switched to using openFrameworks.
 
-## Using openFrameworks to export STL file(sloved)
+### Using openFrameworks to export STL file(sloved)
 
   I'm using ofxSTL lib to import and export STL files, it's work. However, I am unable to export my model without loading an STL file, meaning if I don't load a file， just directly create or modify a model, I can't export the model.
   However, I tried writing some utility methods myself to import the model's vertices, faces, and normals into the ofxSTL exporter, and then I was able to successfully export the correct STL file.

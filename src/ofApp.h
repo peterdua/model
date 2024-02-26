@@ -7,6 +7,9 @@
 #include "ofxGui.h"
 #include "Model.h"
 #include "CubeModel.h"
+#include "ofxAssimpModelLoader.h"
+#include "AssimpModel.h"
+
 #include <vector>
 
 
@@ -34,6 +37,7 @@ public:
 	ofxPanel gui;
 	ofxButton cubeButton;
 	ofxButton sphereButton;
+	ofxButton loadModelButton;
 
 	
 	std::vector<ofBoxPrimitive> cubes;	
@@ -54,8 +58,11 @@ public:
 	ofEasyCam cam;
 
 	void cubeButtonPressed();
-	void sphereButtonPressed();	
+	void sphereButtonPressed();
+	void loadModelButtonPressed();
 
 	std::vector<Model*> models; // 存储所有模型的指针
 	Model* selectedModel = nullptr; // 指向当前选中模型的指针
+	Model* mainModel = new Model(); // 作为所有模型部分的容器
+
 };

@@ -1,14 +1,18 @@
 #include "ofApp.h"
 
 //--------------------------------------------------------------
-void ofApp::setup() {   
-    
-    gui.setup(); 
-    gui.add(cubeButton.setup("Cube")); 
-    gui.add(sphereButton.setup("Sphere")); 
+void ofApp::setup() {
+    ofSetLogLevel(OF_LOG_NOTICE);
+    gui.setup();
+    gui.add(cubeButton.setup("Cube"));
+    gui.add(sphereButton.setup("Sphere"));
+
+    gui.add(loadModelButton.setup("Load Model"));
 
     cubeButton.addListener(this, &ofApp::cubeButtonPressed);
     sphereButton.addListener(this, &ofApp::sphereButtonPressed);
+
+    loadModelButton.addListener(this, &ofApp::loadModelButtonPressed);
 }
 
 //--------------------------------------------------------------
@@ -18,7 +22,7 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    ofBackground(255);
+    ofBackgroundGradient(ofColor::white, ofColor::gray);
 
     cam.begin(); 
     ofSetColor(128, 128, 128);
@@ -61,29 +65,29 @@ void ofApp::keyPressed(int key) {
     case OF_KEY_DOWN:
         pos.y -= moveStep; // 向下移动
         break;
-    case 'Q':
+    case 'q':
         pos.z -= moveStep; // 向里移动
         break;
-    case 'E':
+    case 'e':
         pos.z += moveStep; // 向外移动
         break;
-    case 'S':
+    case 's':
     {
-        ofxSTLExporter exporter;
-        exporter.useASCIIFormat(true); 
-        exporter.beginModel("ExportedModel");
-
-        for (auto* model : models) {
-            model->addToSTL(exporter);
+        if (selectedModel != nullptr) { 
+            ofLogNotice() << "Exporting selected model to STL file.";
+            mainModel->exportModelToSTL(outputSTLPath);
+            ofLogNotice() << "Selected model exported to STL file.";
         }
-
-        exporter.saveModel(outputSTLPath); // 保存STL文件
-        ofLogNotice() << "All models exported to STL file.";
+        else {
+            ofLogError() << "No model selected for export.";
+        }
+        break;
     }
 
+
     }
 
-    selectedModel->setPosition(pos); // 更新模型位置   
+    selectedModel->setPosition(pos);  
    
 }
 
@@ -93,11 +97,62 @@ void ofApp::cubeButtonPressed() {
     newCube->setPosition(ofVec3f(0, 0, 0));
     models.push_back(newCube); 
     selectedModel = newCube;
+    mainModel->addPart(*newCube); 
+
 }
 
 void ofApp::sphereButtonPressed() {
     
 }
+
+void ofApp::loadModelButtonPressed() {
+    string filepath = "holder1.stl"; 
+    //string filepath = "sphere.stl"; 
+    //string filepath = "2.stl"; 
+
+    AssimpModel* newModel = new AssimpModel(); 
+    if (newModel->loadModel(filepath)) { 
+        ofLogNotice("Model Loaded") << "Model loaded successfully with mesh count: " << newModel->modelLoader.getMeshCount();
+        for (int i = 0; i < newModel->modelLoader.getMeshCount(); ++i) {
+            ofMesh mesh = newModel->modelLoader.getMesh(i);
+            ofLogNotice("Model Loaded") << "Mesh " << i << ": Vertex Count = " << mesh.getNumVertices();
+            ofLogNotice("Model Loaded") << "Mesh " << i << ": Index Count = " << mesh.getNumIndices();
+            ofLogNotice("Model Loaded") << "Mesh " << i << ": Normal Count = " << mesh.getNumNormals();
+            ofLogNotice("Model Loaded") << "Mesh " << i << ": TexCoords Count = " << mesh.getNumTexCoords();
+        }
+        models.push_back(newModel); 
+        selectedModel = newModel; 
+
+        for (int i = 0; i < newModel->modelLoader.getMeshCount(); ++i) {
+            ofMesh mesh = newModel->modelLoader.getMesh(i);
+          
+            std::vector<ofIndexType> indices = mesh.getIndices();
+
+            if (indices.size() % 3 == 0) {
+                
+                mainModel->combineMeshes(mesh);
+            }
+            else {
+             
+                ofLogNotice() << "Mesh " << i << " 的索引数量不是3的倍数，已跳过。";
+               
+            }
+        }
+
+        mainModel->addPart(*newModel); 
+        
+        
+        ofLogNotice("MainModel Info") << "MainModel now has " << mainModel->parts.size() << " parts.";
+        mainModel->printMeshInfo();
+    }
+    else {
+        ofLogError("Model Loading") << "Failed to load model: " << filepath;
+        delete newModel; 
+    }
+}
+
+
+
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key) {

@@ -9,6 +9,7 @@
 #include "CubeModel.h"
 #include "ofxAssimpModelLoader.h"
 #include "AssimpModel.h"
+#include <memory> 
 
 #include <vector>
 
@@ -61,8 +62,9 @@ public:
 	void sphereButtonPressed();
 	void loadModelButtonPressed();
 
-	std::vector<Model*> models; // 存储所有模型的指针
-	Model* selectedModel = nullptr; // 指向当前选中模型的指针
-	Model* mainModel = new Model(); // 作为所有模型部分的容器
+	std::vector<std::shared_ptr<Model>> models; // 存储所有模型的智能指针
+	std::shared_ptr<Model> selectedModel = nullptr; // 指向当前选中模型的智能指针
+	std::shared_ptr<Model> mainModel = std::make_shared<Model>(); // 初始化主模型
+	
 
 };

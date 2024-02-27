@@ -10,14 +10,19 @@ ofVec3f Model::getPosition() const {
 }
 
 // 设置模型旋转
-void Model::setRotation(float angle, const ofVec3f& axis) {
+void Model::setRotation(float angle, const ofVec3f& axis) { 
     rotationAngle = angle;
     rotationAxis = axis;
 }
 
-void Model::addPart(const Model& part) {
+void Model::addPart(std::shared_ptr<Model> part) {
     parts.push_back(part);
 }
+
+void Model::removePart(std::shared_ptr<Model> part) {
+    parts.erase(std::remove(parts.begin(), parts.end(), part), parts.end());
+}
+
 
 void Model::addMesh(const ofMesh& mesh) {
     combinedMesh.append(mesh);
@@ -25,14 +30,30 @@ void Model::addMesh(const ofMesh& mesh) {
 
 }
 
-void Model::combineMeshes(const ofMesh& newMesh) {    
-    combinedMesh.append(newMesh);
-    ofLogNotice("Model::combineMeshes") << "合并了一个新的 Mesh，现在 combinedMesh 中的顶点数为：" << combinedMesh.getNumVertices();
+void Model::combineMeshes() {
+    //combinedMesh.clear();
+
+    for (auto& part : parts) {
+        
+        ofMesh partMesh = part->getMesh();
+        ofVec3f position = part->getPosition();
+        ofLogNotice() << "position:" << position;
+
+        for (auto& vert : partMesh.getVertices()) {
+            vert += position;
+        }
+
+        combinedMesh.append(partMesh);
+    }
+
+    ofLogNotice("Model::applyTransformsAndCombine") << "动态变换并合并完成，combinedMesh 中的顶点数为：" << combinedMesh.getNumVertices();
 }
+
 
 
 void Model::exportModelToSTL(const std::string& filePath) {  
 
+    combineMeshes();
     ofxSTLExporter stlExporter;
     stlExporter.useASCIIFormat(false); 
     stlExporter.beginModel("CombinedModel");
@@ -65,10 +86,8 @@ void Model::exportModelToSTL(const std::string& filePath) {
 
     stlExporter.saveModel(filePath);
     ofLogNotice() << "Model exported to STL file: " << filePath;
+    combinedMesh.clear();
 
-
-    stlExporter.saveModel(filePath);
-    ofLogNotice() << "Model exported to STL file: " << filePath;
 }
 
 void Model::draw() const {

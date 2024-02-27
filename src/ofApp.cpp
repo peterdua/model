@@ -70,12 +70,28 @@ void ofApp::keyPressed(int key) {
         break;
     case 'e':
         pos.z += moveStep; // 向外移动
+        break;    
+    case 'i':
+        if (selectedModel) {
+            // 从 models 容器中移除选中的模型
+            auto it = std::find(models.begin(), models.end(), selectedModel);
+            if (it != models.end()) {
+                models.erase(it); // 从容器中删除
+            }
+
+            // 假设 mainModel 和 models 使用 std::shared_ptr
+            mainModel->removePart(selectedModel);
+
+            selectedModel.reset(); // 对于 std::shared_ptr，使用 reset 来清除
+
+            ofLogNotice() << "Selected model deleted.";
+        }
         break;
     case 's':
     {
-        if (selectedModel != nullptr) { 
+        if (selectedModel != nullptr) {
             ofLogNotice() << "Exporting selected model to STL file.";
-            mainModel->exportModelToSTL(outputSTLPath);
+            mainModel->exportModelToSTL(outputSTLPath); 
             ofLogNotice() << "Selected model exported to STL file.";
         }
         else {
@@ -86,18 +102,21 @@ void ofApp::keyPressed(int key) {
 
 
     }
-
-    selectedModel->setPosition(pos);  
+    if (selectedModel) { // 检查 selectedModel 是否指向一个有效的对象
+        selectedModel->setPosition(pos);
+        ofLogNotice() << "位置" << pos;
+    }
    
 }
 
 void ofApp::cubeButtonPressed() {
-    Model* newCube = new CubeModel(); 
-   
+    
+    std::shared_ptr<CubeModel> newCube = std::make_shared<CubeModel>();
+
     newCube->setPosition(ofVec3f(0, 0, 0));
     models.push_back(newCube); 
     selectedModel = newCube;
-    mainModel->addPart(*newCube); 
+    mainModel->addPart(newCube);
 
 }
 
@@ -110,44 +129,28 @@ void ofApp::loadModelButtonPressed() {
     //string filepath = "sphere.stl"; 
     //string filepath = "2.stl"; 
 
-    AssimpModel* newModel = new AssimpModel(); 
-    if (newModel->loadModel(filepath)) { 
-        ofLogNotice("Model Loaded") << "Model loaded successfully with mesh count: " << newModel->modelLoader.getMeshCount();
-        for (int i = 0; i < newModel->modelLoader.getMeshCount(); ++i) {
-            ofMesh mesh = newModel->modelLoader.getMesh(i);
-            ofLogNotice("Model Loaded") << "Mesh " << i << ": Vertex Count = " << mesh.getNumVertices();
-            ofLogNotice("Model Loaded") << "Mesh " << i << ": Index Count = " << mesh.getNumIndices();
-            ofLogNotice("Model Loaded") << "Mesh " << i << ": Normal Count = " << mesh.getNumNormals();
-            ofLogNotice("Model Loaded") << "Mesh " << i << ": TexCoords Count = " << mesh.getNumTexCoords();
-        }
+    std::shared_ptr<AssimpModel> newModel = std::make_shared<AssimpModel>();
+    if (newModel->loadModel(filepath)) {        
         models.push_back(newModel); 
         selectedModel = newModel; 
-
         for (int i = 0; i < newModel->modelLoader.getMeshCount(); ++i) {
-            ofMesh mesh = newModel->modelLoader.getMesh(i);
-          
+            ofMesh mesh = newModel->modelLoader.getMesh(i);          
             std::vector<ofIndexType> indices = mesh.getIndices();
-
-            if (indices.size() % 3 == 0) {
-                
-                mainModel->combineMeshes(mesh);
+            if (indices.size() % 3 == 0) {                
+                mainModel->addMesh(mesh);
             }
-            else {
-             
-                ofLogNotice() << "Mesh " << i << " 的索引数量不是3的倍数，已跳过。";
-               
+            else {             
+                ofLogNotice() << "Mesh " << i << " 的索引数量不是3的倍数，已跳过。";               
             }
         }
-
-        mainModel->addPart(*newModel); 
-        
+        mainModel->addPart(newModel);         
         
         ofLogNotice("MainModel Info") << "MainModel now has " << mainModel->parts.size() << " parts.";
         mainModel->printMeshInfo();
     }
     else {
         ofLogError("Model Loading") << "Failed to load model: " << filepath;
-        delete newModel; 
+        
     }
 }
 

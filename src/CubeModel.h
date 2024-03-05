@@ -3,11 +3,17 @@
 
 
 class CubeModel : public Model {
-public:
+public:    
     
-    CubeModel::CubeModel();
-    void CubeModel::setupCube();
+    CubeModel::CubeModel();    
     void draw() const override;
-    
 
+    void setSize(float size) override {
+        cubeSize = size;
+        setupCube(); 
+    }
+
+private:
+    float cubeSize;
+    void setupCube(); 
 };

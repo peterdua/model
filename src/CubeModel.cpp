@@ -1,20 +1,25 @@
 #include "CubeModel.h"
 
 
+CubeModel::CubeModel()
+{
+    setupCube();
+}
+
 void CubeModel::setupCube() {
     mesh.clear();
 
-    float size = 50.0f; // 立方体边长的一半
+    float halfSize = 1.0f;
 
     // 添加立方体的顶点
-    mesh.addVertex(ofPoint(-size, -size, size));  // 0 左下前
-    mesh.addVertex(ofPoint(size, -size, size));  // 1 右下前
-    mesh.addVertex(ofPoint(size, size, size));  // 2 右上前
-    mesh.addVertex(ofPoint(-size, size, size));  // 3 左上前
-    mesh.addVertex(ofPoint(-size, -size, -size));  // 4 左下后
-    mesh.addVertex(ofPoint(size, -size, -size));  // 5 右下后
-    mesh.addVertex(ofPoint(size, size, -size));  // 6 右上后
-    mesh.addVertex(ofPoint(-size, size, -size));  // 7 左上后
+    mesh.addVertex(ofPoint(-cubeSize * halfSize, -cubeSize * halfSize, cubeSize * halfSize));  // 0 左下前
+    mesh.addVertex(ofPoint(cubeSize * halfSize, -cubeSize * halfSize, cubeSize * halfSize));  // 1 右下前
+    mesh.addVertex(ofPoint(cubeSize * halfSize, cubeSize * halfSize, cubeSize * halfSize));  // 2 右上前
+    mesh.addVertex(ofPoint(-cubeSize * halfSize, cubeSize * halfSize, cubeSize * halfSize));  // 3 左上前
+    mesh.addVertex(ofPoint(-cubeSize * halfSize, -cubeSize * halfSize, -cubeSize * halfSize));  // 4 左下后
+    mesh.addVertex(ofPoint(cubeSize * halfSize, -cubeSize * halfSize, -cubeSize * halfSize));  // 5 右下后
+    mesh.addVertex(ofPoint(cubeSize * halfSize, cubeSize * halfSize, -cubeSize * halfSize));  // 6 右上后
+    mesh.addVertex(ofPoint(-cubeSize * halfSize, cubeSize * halfSize, -cubeSize * halfSize));  // 7 左上后
 
     // 前面
     mesh.addIndex(0); mesh.addIndex(1); mesh.addIndex(2);
@@ -60,14 +65,14 @@ void CubeModel::setupCube() {
 }
 
 
-CubeModel::CubeModel() {
-    setupCube(); 
-}
+
 
 void CubeModel::draw() const {    
     ofPushMatrix();
     ofTranslate(position);
-    ofRotate(rotationAngle, rotationAxis.x, rotationAxis.y, rotationAxis.z);
+    ofRotateX(rotation.x);
+    ofRotateY(rotation.y);
+    ofRotateZ(rotation.z);
     mesh.draw();
     ofPopMatrix();
 }

@@ -4,15 +4,59 @@ void Model::setPosition(const ofVec3f& pos) {
     position = pos;
 }
 
-// 获取模型位置
 ofVec3f Model::getPosition() const {
     return position;
 }
+float Model::getRotationX() const {
+    return rotation.x;
+}
 
-// 设置模型旋转
+float Model::getRotationY() const {
+    return rotation.y;
+}
+
+float Model::getRotationZ() const {
+    return rotation.z;
+}
+
+void Model::setSize(float size)
+{
+    ofLogNotice() << "set";
+}
+
 void Model::setRotation(float angle, const ofVec3f& axis) { 
-    rotationAngle = angle;
-    rotationAxis = axis;
+    rotation.x = angle;
+    rotation.y = angle;
+    rotation.z = angle;   
+}
+
+ofVec3f Model::getRotation() const {
+    return rotation;
+}
+
+void Model::rotate(float angle, const ofVec3f& axis) {
+    if (axis == ofVec3f(1, 0, 0)) { // X轴
+        rotation.x += angle;
+    }
+    else if (axis == ofVec3f(0, 1, 0)) { // Y轴
+        rotation.y += angle;
+    }
+    else if (axis == ofVec3f(0, 0, 1)) { // Z轴
+        rotation.z += angle;
+    }
+
+    rotation.x = fmod(rotation.x, 360);
+    rotation.y = fmod(rotation.y, 360);
+    rotation.z = fmod(rotation.z, 360);
+}
+
+void Model::applyRotation() {
+    ofPushMatrix();
+    ofTranslate(position); 
+    ofRotateX(rotation.x);
+    ofRotateY(rotation.y);
+    ofRotateZ(rotation.z);
+    ofPopMatrix();
 }
 
 void Model::addPart(std::shared_ptr<Model> part) {
@@ -31,28 +75,37 @@ void Model::addMesh(const ofMesh& mesh) {
 }
 
 void Model::combineMeshes() {
-    //combinedMesh.clear();
-
+   
     for (auto& part : parts) {
-        
         ofMesh partMesh = part->getMesh();
-        ofVec3f position = part->getPosition();
-        ofLogNotice() << "position:" << position;
+        glm::mat4 globalTransform = part->getGlobalTransformMatrix();
 
         for (auto& vert : partMesh.getVertices()) {
-            vert += position;
+         
+            glm::vec4 globalVert = globalTransform * glm::vec4(vert, 1.0f);
+            vert.x = globalVert.x;
+            vert.y = globalVert.y;
+            vert.z = globalVert.z;
         }
 
         combinedMesh.append(partMesh);
     }
+}
 
-    ofLogNotice("Model::applyTransformsAndCombine") << "动态变换并合并完成，combinedMesh 中的顶点数为：" << combinedMesh.getNumVertices();
+glm::mat4 Model::getGlobalTransformMatrix() const {
+    glm::vec3 glmPosition = glm::vec3(position.x, position.y, position.z);
+    
+    glm::mat4 transform = glm::translate(glm::mat4(1.0f), glmPosition) *
+        glm::rotate(glm::mat4(1.0f), glm::radians(rotation.x), glm::vec3(1, 0, 0)) * 
+        glm::rotate(glm::mat4(1.0f), glm::radians(rotation.y), glm::vec3(0, 1, 0)) * 
+        glm::rotate(glm::mat4(1.0f), glm::radians(rotation.z), glm::vec3(0, 0, 1)); 
+    return transform;
 }
 
 
 
-void Model::exportModelToSTL(const std::string& filePath) {  
 
+void Model::exportModelToSTL(const std::string& filePath) {  
     combineMeshes();
     ofxSTLExporter stlExporter;
     stlExporter.useASCIIFormat(false); 
@@ -94,7 +147,9 @@ void Model::draw() const {
    
     ofPushMatrix();
     ofTranslate(position);
-    ofRotateDeg(rotationAngle, rotationAxis.x, rotationAxis.y, rotationAxis.z);
+    ofRotateX(rotation.x);
+    ofRotateY(rotation.y);
+    ofRotateZ(rotation.z);
     combinedMesh.drawWireframe(); 
 
     ofPopMatrix();

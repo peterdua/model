@@ -13,6 +13,8 @@ public:
     ofxAssimpModelLoader modelLoader;
 
     bool loadModel(const std::string& filepath) {
+        modelLoader.setScaleNormalization(false);
+
         bool loaded = modelLoader.loadModel(filepath);
         if (loaded) {
             ofLogNotice() << "Model loaded, mesh count: " << modelLoader.getMeshCount();
@@ -45,12 +47,30 @@ public:
         return modelLoader.getSceneCenter();
     }
 
+    //void scaleModelVertices(ofxAssimpModelLoader& model, float scaleFactor) {
+    //    // 遍历模型中的每个网格
+    //    for (unsigned int i = 0; i < model.getMeshCount(); i++) {
+    //        // 获取当前网格
+    //        ofMesh& mesh = model.getMesh(i);
+    //        // 获取网格的顶点数组
+    //        std::vector<ofPoint>& vertices = mesh.getVertices();
+    //        // 遍历顶点数组
+    //        for (unsigned int j = 0; j < vertices.size(); j++) {
+    //            // 缩放每个顶点的坐标
+    //            vertices[j] *= scaleFactor;
+    //        }
+    //    }
+    //}
+
+
     virtual void draw()const override {
         ofxAssimpModelLoader& loader = const_cast<ofxAssimpModelLoader&>(modelLoader);
 
         ofPushMatrix();
         ofTranslate(position);
-        ofRotate(rotationAngle, rotationAxis.x, rotationAxis.y, rotationAxis.z);
+        ofRotateX(rotation.x);
+        ofRotateY(rotation.y);
+        ofRotateZ(rotation.z);
 
         loader.drawWireframe();
 

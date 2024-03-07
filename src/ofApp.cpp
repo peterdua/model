@@ -155,7 +155,6 @@ void ofApp::keyPressed(int key) {
 void ofApp::cubeButtonPressed() {    
     std::shared_ptr<CubeModel> newCube = std::make_shared<CubeModel>();   
     newCube->setSize(modelSize.get()); 
-
     newCube->setPosition(ofVec3f(0, 0, 0));
     models.push_back(newCube); 
     selectedModel = newCube;
@@ -167,62 +166,30 @@ void ofApp::sphereButtonPressed() {
 }
 
 void ofApp::loadModelButtonPressed() {
-    //string filepath = "holdertest.obj"; 
-    //string filepath = "sphere.stl"; 
-    //string filepath = "2.stl"; 
-    //string filepath = "smpgaizi.stl"; 
-    string filepath = "smpbase.stl"; 
-
-    std::shared_ptr<AssimpModel> newModel = std::make_shared<AssimpModel>();
-    if (newModel->loadModel(filepath)) {        
-        models.push_back(newModel); 
-        selectedModel = newModel; 
-        for (int i = 0; i < newModel->modelLoader.getMeshCount(); ++i) {
-            ofMesh mesh = newModel->modelLoader.getMesh(i);          
-            std::vector<ofIndexType> indices = mesh.getIndices();
-            if (indices.size() % 3 == 0) {                
-                mainModel->addMesh(mesh);
-            }
-            else {             
-                ofLogNotice() << "Mesh " << i << " 的索引数量不是3的倍数，已跳过。";               
-            }
-        }
-        mainModel->addPart(newModel);         
-        
-        ofLogNotice("MainModel Info") << "MainModel now has " << mainModel->parts.size() << " parts.";
-        mainModel->printMeshInfo();
+    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>();    
+    std::string modelPath = MODEL_FILE_PATH;
+    if (newAssimpModel->loadModel(modelPath)) {
+        newAssimpModel->adMeshes();
+        models.push_back(newAssimpModel); 
+        selectedModel = newAssimpModel; 
+        mainModel->addPart(newAssimpModel); 
     }
     else {
-        ofLogError("Model Loading") << "Failed to load model: " << filepath;
-        
+        ofLogError("AssimpModelButtonPressed") << "Failed to load model: " << modelPath;
     }
 }
 
 void ofApp::loadBasemodelButtonPressed() {    
-    string filepath = "smpgaizi.stl";
-
-    std::shared_ptr<Cover> newModel = std::make_shared<Cover>();
-    if (newModel->loadModel(filepath)) {
-        models.push_back(newModel);
-        selectedModel = newModel;
-        for (int i = 0; i < newModel->modelLoader.getMeshCount(); ++i) {
-            ofMesh mesh = newModel->modelLoader.getMesh(i);
-            std::vector<ofIndexType> indices = mesh.getIndices();
-            if (indices.size() % 3 == 0) {
-                mainModel->addMesh(mesh);
-            }
-            else {
-                ofLogNotice() << "Mesh " << i << " 的索引数量不是3的倍数，已跳过。";
-            }
-        }
-        mainModel->addPart(newModel);
-
-        ofLogNotice("MainModel Info") << "MainModel now has " << mainModel->parts.size() << " parts.";
-        mainModel->printMeshInfo();
+    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>();
+    std::string modelPath = "smpcover.stl";
+    if (newAssimpModel->loadModel(modelPath)) {
+        newAssimpModel->adMeshes();
+        models.push_back(newAssimpModel); 
+        selectedModel = newAssimpModel; 
+        mainModel->addPart(newAssimpModel); 
     }
     else {
-
-        ofLogError("Model Loading") << "Failed to load model: " << filepath;
+        ofLogError("AssimpModelButtonPressed") << "Failed to load model: " << modelPath;
     }
 }
 

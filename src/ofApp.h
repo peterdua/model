@@ -72,6 +72,8 @@ public:
 	ofxSTLBase stlModel;
 	string inputSTLPath = "cube.stl";
 	string outputSTLPath = "test.stl";
+	const std::string MODEL_FILE_PATH = "smpbase1.stl";
+
 	ofMesh mesh;
 	ofEasyCam cam;
 
@@ -79,6 +81,7 @@ public:
 	void cubeButtonPressed();
 	void sphereButtonPressed();
 	void loadModelButtonPressed();
+	\
 	void loadBasemodelButtonPressed();
 
 	void rotateXPlusClicked();

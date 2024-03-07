@@ -61,6 +61,7 @@ protected:
     ofVec3f position;
     ofVec3f rotation; 
     ofMesh combinedMesh; // 用于存储组合后的网格
+    ofMesh meshes;
     ofMesh mesh; 
     //ofxAssimpModelLoader modelLoader;
 };

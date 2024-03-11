@@ -8,35 +8,42 @@ void ofApp::setup() {
     guiModel.setup("Model Creation"); 
     guiModel.add(cubeButton.setup("Cube"));
     guiModel.add(sphereButton.setup("Sphere"));
+    guiModel.add(sphrEarButton.setup("Cat ear"));
     guiModel.add(loadModelButton.setup("BaseModel-1"));
     guiModel.add(loadBasemodelButton.setup("CoverModel-1"));
     guiModel.add(modelSize.set("Size",10,1,50));
-    
     guiModel.setPosition(10, 10); 
 
-    int guiModelHeight = guiModel.getHeight();
-    int spacing = 10; 
+
+    int guiModelHeight1 = guiModel.getHeight();
+    int spacing = 10;
+
+    guiBasemodel.setup("Base holder");
+    guiBasemodel.add(loadSphrBasemodelButton.setup("Square holder"));
+    guiBasemodel.add(loadSphrCovermodelButton.setup("Square holder's cover"));
+    guiBasemodel.setPosition(10, 10 + guiModelHeight1 + spacing);
+
+    int guiModelHeight = guiBasemodel.getHeight();     
     guiRotate.setup("Rotation Control"); 
-    guiRotate.add(rotateXPlus.setup("Rotate X+"));
-    guiRotate.add(rotateXMinus.setup("Rotate X-"));
-    guiRotate.add(rotateYPlus.setup("Rotate Y+"));
-    guiRotate.add(rotateYMinus.setup("Rotate Y-"));
-    guiRotate.add(rotateZPlus.setup("Rotate Z+"));
-    guiRotate.add(rotateZMinus.setup("Rotate Z-"));
-    guiRotate.setPosition(10, 10 + guiModelHeight + spacing); 
+    guiRotate.add(rotateX.set("X", 0, 0, 360));
+    guiRotate.add(rotateY.set("Y", 0, 0, 360));
+    guiRotate.add(rotateZ.set("Z", 0, 0, 360));       
+    guiRotate.setPosition(10, 20 + guiModelHeight + guiModelHeight1 + spacing); 
 
     cubeButton.addListener(this, &ofApp::cubeButtonPressed);
     sphereButton.addListener(this, &ofApp::sphereButtonPressed);
+    sphrEarButton.addListener(this, &ofApp::loadSphrrabEarButtonPressed);
     loadModelButton.addListener(this, &ofApp::loadModelButtonPressed);
     modelSize.addListener(this, &ofApp::modelSizeChanged);
-    loadBasemodelButton.addListener(this, &ofApp::loadBasemodelButtonPressed);
 
-    rotateXPlus.addListener(this, &ofApp::rotateXPlusClicked);
-    rotateXMinus.addListener(this, &ofApp::rotateXMinusClicked);
-    rotateYPlus.addListener(this, &ofApp::rotateYPlusClicked);
-    rotateYMinus.addListener(this, &ofApp::rotateYMinusClicked);
-    rotateZPlus.addListener(this, &ofApp::rotateZPlusClicked);
-    rotateZMinus.addListener(this, &ofApp::rotateZMinusClicked);
+    loadBasemodelButton.addListener(this, &ofApp::loadBasemodelButtonPressed);
+    loadSphrBasemodelButton.addListener(this, &ofApp::loadSphrBasemodelButtonPressed);
+    loadSphrCovermodelButton.addListener(this, &ofApp::loadSphrCovermodelButtonPressed);
+
+    rotateX.addListener(this, &ofApp::modelXrotationChanged);
+    rotateY.addListener(this, &ofApp::modelYrotationChanged);
+    rotateZ.addListener(this, &ofApp::modelZrotationChanged);
+
 
 }
 
@@ -55,6 +62,9 @@ void ofApp::modelSizeChanged(int& size) {
 
 void ofApp::exit() {
     modelSize.removeListener(this, &ofApp::modelSizeChanged);
+    rotateX.removeListener(this, &ofApp::modelXrotationChanged);
+    rotateY.removeListener(this, &ofApp::modelYrotationChanged);
+    rotateZ.removeListener(this, &ofApp::modelZrotationChanged);
 }
 
 //--------------------------------------------------------------
@@ -91,6 +101,7 @@ void ofApp::draw() {
     cam.end(); 
     guiRotate.draw(); 
     guiModel.draw(); 
+    guiBasemodel.draw();
 }
 
 //--------------------------------------------------------------
@@ -181,7 +192,7 @@ void ofApp::loadModelButtonPressed() {
 
 void ofApp::loadBasemodelButtonPressed() {    
     std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>();
-    std::string modelPath = "smpcover.stl";
+    std::string modelPath = "smpsqrcover.stl";
     if (newAssimpModel->loadModel(modelPath)) {
         newAssimpModel->adMeshes();
         models.push_back(newAssimpModel); 
@@ -193,54 +204,87 @@ void ofApp::loadBasemodelButtonPressed() {
     }
 }
 
-void ofApp::rotateXPlusClicked() {
-    if (selectedModel != nullptr) {
-        selectedModel->rotate(15, ofVec3f(1, 0, 0));
-        ofLogNotice() << "x+";
-        selectedModel->combineMeshes();
-
+void ofApp::loadSphrBasemodelButtonPressed() {
+    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>();
+    //std::string modelPath = "smpsphrbase.stl";
+    std::string modelPath = "2.stl";
+    if (newAssimpModel->loadModel(modelPath)) {
+        newAssimpModel->adMeshes();
+        models.push_back(newAssimpModel);
+        selectedModel = newAssimpModel;
+        mainModel->addPart(newAssimpModel);
+    }
+    else {
+        ofLogError("AssimpModelButtonPressed") << "Failed to load model: " << modelPath;
     }
 }
 
-void ofApp::rotateXMinusClicked() {
-    if (selectedModel != nullptr) {
-        selectedModel->rotate(-15, ofVec3f(1, 0, 0));
-        ofLogNotice() << "x-";
-
+void ofApp::loadSphrCovermodelButtonPressed() {
+    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>();
+    std::string modelPath = "smpsphrcover.stl";
+    if (newAssimpModel->loadModel(modelPath)) {
+        newAssimpModel->adMeshes();
+        models.push_back(newAssimpModel);
+        selectedModel = newAssimpModel;
+        mainModel->addPart(newAssimpModel);
+    }
+    else {
+        ofLogError("AssimpModelButtonPressed") << "Failed to load model: " << modelPath;
     }
 }
 
-void ofApp::rotateYPlusClicked() {
-    if (selectedModel != nullptr) {
-       
-        selectedModel->rotate(15, ofVec3f(0, 1, 0)); // 绕Y轴正向旋转15度
+void ofApp::loadSphrrabEarButtonPressed() {
+    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>();
+    std::string modelPath = "sphrrabbitear.stl";
+    if (newAssimpModel->loadModel(modelPath)) {
+        newAssimpModel->adMeshes();
+        models.push_back(newAssimpModel);
+        selectedModel = newAssimpModel;
+        mainModel->addPart(newAssimpModel);
+    }
+    else {
+        ofLogError("AssimpModelButtonPressed") << "Failed to load model: " << modelPath;
     }
 }
 
-void ofApp::rotateYMinusClicked() {
-    if (selectedModel != nullptr) {
-        
-        selectedModel->rotate(-15, ofVec3f(0, 1, 0)); // 绕Y轴反向旋转15度
+void ofApp::modelXrotationChanged(int& rotation) {
+    int step = 15; 
+    int newRotation = ((rotation + step / 2) / step) * step; 
+    if (newRotation != rotation) {
+        rotateX.removeListener(this, &ofApp::modelXrotationChanged);
+        rotateX.set(newRotation);
+        rotateX.addListener(this, &ofApp::modelXrotationChanged);
+    }
+
+    if (selectedModel) {
+        selectedModel->setRotation(newRotation, ofVec3f(1,0,0));
     }
 }
 
-void ofApp::rotateZPlusClicked() {
-    if (selectedModel != nullptr) {
-        
-        selectedModel->rotate(15, ofVec3f(0, 0, 1)); // 绕Z轴正向旋转15度
+void ofApp::modelYrotationChanged(int& rotation) {
+    int step = 15; 
+    int newRotation = ((rotation + step / 2) / step) * step; 
+    if (newRotation != rotation) {
+        rotateY.removeListener(this, &ofApp::modelYrotationChanged);
+        rotateY.set(newRotation);
+        rotateY.addListener(this, &ofApp::modelYrotationChanged);
+    }
+    if (selectedModel) {
+        selectedModel->setRotation(newRotation, ofVec3f(0, 1, 0));
     }
 }
 
-void ofApp::rotateZMinusClicked() {
-    if (selectedModel != nullptr) {
-        
-        selectedModel->rotate(-15, ofVec3f(0, 0, 1)); // 绕Z轴反向旋转15度
+void ofApp::modelZrotationChanged(int& rotation) {
+    int step = 15; 
+    int newRotation = ((rotation + step / 2) / step) * step; 
+    if (newRotation != rotation) {
+        rotateZ.removeListener(this, &ofApp::modelZrotationChanged);
+        rotateZ.set(newRotation);
+        rotateZ.addListener(this, &ofApp::modelZrotationChanged);
     }
-}
-
-int ofApp::getSize()
-{
-    return modelSize;
+    if (selectedModel) {
+        selectedModel->setRotation(newRotation, ofVec3f(0, 0, 1));
+    }
 }
 
 
@@ -275,17 +319,12 @@ void ofApp::mousePressed(int x, int y, int button) {
             closestIndex = i;
         }
     }
-
     if (closestIndex != -1) {
-        selectedModel = models[closestIndex];
-        
-
-        
+        selectedModel = models[closestIndex];           
     }
     else {
         std::cout << "No model selected." << std::endl;
-        selectedModel = nullptr;
-        
+        selectedModel = nullptr;        
     }
 }
 

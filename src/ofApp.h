@@ -38,23 +38,26 @@ public:
 	void gotMessage(ofMessage msg);
 	
 	// GUI元素
-	ofxPanel guiModel; // 用于模型创建的GUI面板
-	ofxPanel guiRotate; // 用于旋转控制的GUI面板
+	ofxPanel guiModel; 
+	ofxPanel guiRotate; 
+	ofxPanel guiBasemodel; 
 
 	ofxFloatSlider rotateXSlider;
 	ofxFloatSlider rotateYSlider;
 	ofxFloatSlider rotateZSlider;
-	ofxButton rotateXPlus;
-	ofxButton rotateXMinus;
-	ofxButton rotateYPlus;
-	ofxButton rotateYMinus;
-	ofxButton rotateZPlus;
-	ofxButton rotateZMinus;
+	
 	ofxButton cubeButton;
 	ofxButton sphereButton;
+	ofxButton sphrEarButton;
 	ofxButton loadModelButton;
 	ofxButton loadBasemodelButton;
+	ofxButton loadSphrCovermodelButton;
+	ofxButton loadSphrBasemodelButton;
+
 	ofParameter <int>modelSize;
+	ofParameter <int>rotateX;
+	ofParameter <int>rotateY;
+	ofParameter <int>rotateZ;
 
 
 	
@@ -72,7 +75,7 @@ public:
 	ofxSTLBase stlModel;
 	string inputSTLPath = "cube.stl";
 	string outputSTLPath = "test.stl";
-	const std::string MODEL_FILE_PATH = "smpbase1.stl";
+	const std::string MODEL_FILE_PATH = "smpsqrbase.stl";
 
 	ofMesh mesh;
 	ofEasyCam cam;
@@ -81,18 +84,15 @@ public:
 	void cubeButtonPressed();
 	void sphereButtonPressed();
 	void loadModelButtonPressed();
-	\
 	void loadBasemodelButtonPressed();
+	void loadSphrBasemodelButtonPressed();
+	void loadSphrCovermodelButtonPressed();
 
-	void rotateXPlusClicked();
-	void rotateXMinusClicked();
-	void rotateYPlusClicked();
-	void rotateYMinusClicked();
-	void rotateZPlusClicked();
-	void rotateZMinusClicked();
+	void loadSphrrabEarButtonPressed();
 
-	int getSize();
-	
+	void modelXrotationChanged(int& rotation);
+	void modelYrotationChanged(int& rotation);
+	void modelZrotationChanged(int& rotation);
 
 	std::vector<std::shared_ptr<Model>> models;
 	std::shared_ptr<Model> selectedModel = nullptr;

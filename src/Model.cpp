@@ -24,11 +24,21 @@ void Model::setSize(float size)
     ofLogNotice() << "set";
 }
 
-void Model::setRotation(float angle, const ofVec3f& axis) { 
-    rotation.x = angle;
-    rotation.y = angle;
-    rotation.z = angle;   
+void Model::setRotation(float angle, const ofVec3f& axis) {
+    // ¼ì²éXÖá
+    if (axis == ofVec3f(1, 0, 0)) {
+        rotation.x = angle;
+    }
+    // ¼ì²éYÖá
+    else if (axis == ofVec3f(0, 1, 0)) {
+        rotation.y = angle;
+    }
+    // ¼ì²éZÖá
+    else if (axis == ofVec3f(0, 0, 1)) {
+        rotation.z = angle;
+    }
 }
+
 
 ofVec3f Model::getRotation() const {
     return rotation;

@@ -9,7 +9,9 @@
 #include "CubeModel.h"
 #include "ofxAssimpModelLoader.h"
 #include "AssimpModel.h"
+#include "AccessoryModel.h"
 #include "Cover.h"
+#include "KeyHandler.h"
 #include <memory> 
 #include <vector>
 
@@ -34,7 +36,9 @@ public:
 	void mouseEntered(int x, int y);
 	void mouseExited(int x, int y);
 	void windowResized(int w, int h);
-	void dragEvent(ofDragInfo dragInfo);	
+	void dragEvent(ofDragInfo dragInfo);
+	void updateSelectedModel(std::shared_ptr<Model> newModel);
+
 	void gotMessage(ofMessage msg);
 	
 	// GUIÔªËØ
@@ -49,6 +53,7 @@ public:
 	ofxButton cubeButton;
 	ofxButton sphereButton;
 	ofxButton sphrEarButton;
+	ofxButton loopButton;
 	ofxButton loadModelButton;
 	ofxButton loadBasemodelButton;
 	ofxButton loadSphrCovermodelButton;
@@ -79,7 +84,7 @@ public:
 
 	ofMesh mesh;
 	ofEasyCam cam;
-
+	KeyHandler keyHandler;
 
 	void cubeButtonPressed();
 	void sphereButtonPressed();
@@ -89,6 +94,7 @@ public:
 	void loadSphrCovermodelButtonPressed();
 
 	void loadSphrrabEarButtonPressed();
+	void loadLoopButtonPressed();
 
 	void modelXrotationChanged(int& rotation);
 	void modelYrotationChanged(int& rotation);
@@ -97,6 +103,11 @@ public:
 	std::vector<std::shared_ptr<Model>> models;
 	std::shared_ptr<Model> selectedModel = nullptr;
 	std::shared_ptr<Model> mainModel = std::make_shared<Model>(); 
-	
-
+	bool isDragging = false;
+	ofVec3f dragOffset; 
+	std::shared_ptr<Model> draggableModel;
+	bool altPressed = false;
+	bool hasBaseModel = false; 
+	bool spr = false;
+	bool sphere = false;
 };

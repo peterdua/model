@@ -10,9 +10,14 @@
 
 class Model {
 
+private:
+    std::string type;
+    string direction;  
+
 public:
     Model() {}
     virtual ~Model() {}
+    Model(std::string type) : type(type) {}
 
     void exportModelToSTL(const std::string& filePath);
 
@@ -27,6 +32,9 @@ public:
     float getRotationY() const;
     float getRotationZ() const;
     virtual void setSize(float size);
+    std::string getType() const {
+        return type;
+    }
 
     void setRotation(float angle, const ofVec3f& axis);
     ofVec3f getRotation() const;
@@ -51,12 +59,14 @@ public:
         //    ofLogNotice("Model::printMeshInfo") << "一个部件的Mesh顶点数: " << mesh.getNumVertices();
         
     }
-
-    //ofVec3f calculateModelCenter() const;
-    //void setModelCenter(const ofVec3f& center);
+    void setDirection(const std::string& dir) {
+        direction = dir;
+    }
+    std::string getDirection() const {
+        return direction;
+    }    
 
     std::vector<std::shared_ptr<Model>> parts;
-
 protected:
     ofVec3f position;
     ofVec3f rotation; 

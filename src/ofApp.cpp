@@ -3,36 +3,39 @@
 //--------------------------------------------------------------
 void ofApp::setup() {
     ofSetLogLevel(OF_LOG_NOTICE);
+    cam.disableMouseInput(); // 初始时禁用，只有在按下Alt时才启用
+
     cam.setPosition(ofVec3f(0, 0, 50)); 
 
     guiModel.setup("Model Creation"); 
     guiModel.add(cubeButton.setup("Cube"));
     guiModel.add(sphereButton.setup("Sphere"));
-    guiModel.add(sphrEarButton.setup("Cat ear"));
-    guiModel.add(loadModelButton.setup("BaseModel-1"));
-    guiModel.add(loadBasemodelButton.setup("CoverModel-1"));
+    guiModel.add(sphrEarButton.setup("Rabbit ear"));
+    guiModel.add(loopButton.setup("Rabbit ear"));
     guiModel.add(modelSize.set("Size",10,1,50));
     guiModel.setPosition(10, 10); 
-
 
     int guiModelHeight1 = guiModel.getHeight();
     int spacing = 10;
 
     guiBasemodel.setup("Base holder");
-    guiBasemodel.add(loadSphrBasemodelButton.setup("Square holder"));
-    guiBasemodel.add(loadSphrCovermodelButton.setup("Square holder's cover"));
+    guiBasemodel.add(loadSphrBasemodelButton.setup("Sphare holder"));
+    guiBasemodel.add(loadSphrCovermodelButton.setup("Sphare holder's cover"));
+    guiBasemodel.add(loadModelButton.setup("Square holder"));
+    guiBasemodel.add(loadBasemodelButton.setup("Square holder's cover"));
     guiBasemodel.setPosition(10, 10 + guiModelHeight1 + spacing);
 
     int guiModelHeight = guiBasemodel.getHeight();     
     guiRotate.setup("Rotation Control"); 
-    guiRotate.add(rotateX.set("X", 0, 0, 360));
-    guiRotate.add(rotateY.set("Y", 0, 0, 360));
-    guiRotate.add(rotateZ.set("Z", 0, 0, 360));       
+    guiRotate.add(rotateX.set("X", 0, -360, 360));   
+    guiRotate.add(rotateY.set("Y", 0, -360, 360));
+    guiRotate.add(rotateZ.set("Z", 0, -360, 360));
     guiRotate.setPosition(10, 20 + guiModelHeight + guiModelHeight1 + spacing); 
 
     cubeButton.addListener(this, &ofApp::cubeButtonPressed);
     sphereButton.addListener(this, &ofApp::sphereButtonPressed);
     sphrEarButton.addListener(this, &ofApp::loadSphrrabEarButtonPressed);
+    loopButton.addListener(this, &ofApp::loadLoopButtonPressed);
     loadModelButton.addListener(this, &ofApp::loadModelButtonPressed);
     modelSize.addListener(this, &ofApp::modelSizeChanged);
 
@@ -43,7 +46,6 @@ void ofApp::setup() {
     rotateX.addListener(this, &ofApp::modelXrotationChanged);
     rotateY.addListener(this, &ofApp::modelYrotationChanged);
     rotateZ.addListener(this, &ofApp::modelZrotationChanged);
-
 
 }
 
@@ -106,65 +108,49 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) { 
-    float moveStep = 10.0; 
-    ofVec3f pos = selectedModel->getPosition(); 
+    keyHandler.handleKeyPress(selectedModel, key, models, mainModel, spr, sphere);      
 
     switch (key) {
-    case OF_KEY_LEFT:
-        pos.x -= moveStep; // 向左移动
+    case OF_KEY_ALT:
+        altPressed = true;
+        cam.enableMouseInput(); // 启用摄像机的鼠标输入
         break;
-    case OF_KEY_RIGHT:
-        pos.x += moveStep; // 向右移动
-        break;
-    case OF_KEY_UP:
-        pos.y += moveStep; // 向上移动
-        break;
-    case OF_KEY_DOWN:
-        pos.y -= moveStep; // 向下移动
-        break;
-    case 'q':
-        pos.z -= moveStep; // 向里移动
-        break;
-    case 'e':
-        pos.z += moveStep; // 向外移动
-        break;    
-    case 'i':
+    case 'i': 
         if (selectedModel) {
-            auto it = std::find(models.begin(), models.end(), selectedModel);
+            auto it = std::find_if(models.begin(), models.end(), [&](const auto& model) {
+                return model == selectedModel;
+                });
             if (it != models.end()) {
                 models.erase(it); 
             }
-
+            if (selectedModel->getType() == "zftbase"){
+                spr = false;
+            }
+            else if (selectedModel->getType() == "yuanbase") {
+                sphere = false;
+            }
             mainModel->removePart(selectedModel);
-
             selectedModel.reset(); 
-
+            hasBaseModel = false;
+            
             ofLogNotice() << "Selected model deleted.";
         }
         break;
-    case 's':
-    {
-        if (selectedModel != nullptr) {
+    case 's': 
+        if (selectedModel) {
             ofLogNotice() << "Exporting selected model to STL file.";
-            mainModel->exportModelToSTL(outputSTLPath); 
+            mainModel->exportModelToSTL("test.stl"); 
             ofLogNotice() << "Selected model exported to STL file.";
         }
         else {
             ofLogError() << "No model selected for export.";
         }
         break;
-    }
-
-    }
-    if (selectedModel) { 
-        selectedModel->setPosition(pos);
-        ofLogNotice() << "位置" << pos;
-    }
-   
+    }        
 }
 
 void ofApp::cubeButtonPressed() {    
-    std::shared_ptr<CubeModel> newCube = std::make_shared<CubeModel>();   
+    std::shared_ptr<CubeModel> newCube = std::make_shared<CubeModel>("cube");
     newCube->setSize(modelSize.get()); 
     newCube->setPosition(ofVec3f(0, 0, 0));
     models.push_back(newCube); 
@@ -177,13 +163,19 @@ void ofApp::sphereButtonPressed() {
 }
 
 void ofApp::loadModelButtonPressed() {
-    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>();    
-    std::string modelPath = MODEL_FILE_PATH;
+    if (hasBaseModel) {
+        ofLogNotice("loadModelButtonPressed") << "抱歉，你只能创建一个基底模型，如果您想换其他的基底模型，请先删除当前模型。";
+        return; 
+    }
+    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>("zftbase");
+    std::string modelPath = "zftbase.stl";
     if (newAssimpModel->loadModel(modelPath)) {
         newAssimpModel->adMeshes();
-        models.push_back(newAssimpModel); 
-        selectedModel = newAssimpModel; 
-        mainModel->addPart(newAssimpModel); 
+        models.push_back(newAssimpModel);
+        selectedModel = newAssimpModel;
+        mainModel->addPart(newAssimpModel);
+        hasBaseModel = true; 
+        spr = true;
     }
     else {
         ofLogError("AssimpModelButtonPressed") << "Failed to load model: " << modelPath;
@@ -191,8 +183,8 @@ void ofApp::loadModelButtonPressed() {
 }
 
 void ofApp::loadBasemodelButtonPressed() {    
-    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>();
-    std::string modelPath = "smpsqrcover.stl";
+    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>("zftcover");
+    std::string modelPath = "zftcover.stl";
     if (newAssimpModel->loadModel(modelPath)) {
         newAssimpModel->adMeshes();
         models.push_back(newAssimpModel); 
@@ -205,14 +197,21 @@ void ofApp::loadBasemodelButtonPressed() {
 }
 
 void ofApp::loadSphrBasemodelButtonPressed() {
-    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>();
+    if (hasBaseModel) {
+        ofLogNotice("loadModelButtonPressed") << "抱歉，你只能创建一个基底模型，如果您想换其他的基底模型，请先删除当前模型。";
+        return; 
+    }
+    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>("yuanbase");
     //std::string modelPath = "smpsphrbase.stl";
-    std::string modelPath = "2.stl";
+    std::string modelPath = "yuanbase.stl";
     if (newAssimpModel->loadModel(modelPath)) {
         newAssimpModel->adMeshes();
         models.push_back(newAssimpModel);
         selectedModel = newAssimpModel;
         mainModel->addPart(newAssimpModel);
+        hasBaseModel = true;
+        sphere = true;
+
     }
     else {
         ofLogError("AssimpModelButtonPressed") << "Failed to load model: " << modelPath;
@@ -220,7 +219,7 @@ void ofApp::loadSphrBasemodelButtonPressed() {
 }
 
 void ofApp::loadSphrCovermodelButtonPressed() {
-    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>();
+    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>("spherecover");
     std::string modelPath = "smpsphrcover.stl";
     if (newAssimpModel->loadModel(modelPath)) {
         newAssimpModel->adMeshes();
@@ -234,13 +233,33 @@ void ofApp::loadSphrCovermodelButtonPressed() {
 }
 
 void ofApp::loadSphrrabEarButtonPressed() {
-    std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>();
-    std::string modelPath = "sphrrabbitear.stl";
+    std::shared_ptr<AccessoryModel> newAssimpModel = std::make_shared<AccessoryModel>("rabear");
+    std::string modelPath = "erduo.stl";
     if (newAssimpModel->loadModel(modelPath)) {
         newAssimpModel->adMeshes();
         models.push_back(newAssimpModel);
         selectedModel = newAssimpModel;
         mainModel->addPart(newAssimpModel);
+
+        ofVec3f newPosition = ofVec3f(0.0f, 25.0f, 0.0f);
+        newAssimpModel->setPosition(newPosition); 
+    }
+    else {
+        ofLogError("AssimpModelButtonPressed") << "Failed to load model: " << modelPath;
+    }
+}
+
+void ofApp::loadLoopButtonPressed() {
+    std::shared_ptr<AccessoryModel> newAssimpModel = std::make_shared<AccessoryModel>("loop");
+    std::string modelPath = "loop.stl";
+    if (newAssimpModel->loadModel(modelPath)) {
+        newAssimpModel->adMeshes();
+        models.push_back(newAssimpModel);
+        selectedModel = newAssimpModel;
+        mainModel->addPart(newAssimpModel);
+
+        ofVec3f newPosition = ofVec3f(26.0f, 0.0f, 0.0f);
+        newAssimpModel->setPosition(newPosition);
     }
     else {
         ofLogError("AssimpModelButtonPressed") << "Failed to load model: " << modelPath;
@@ -275,7 +294,7 @@ void ofApp::modelYrotationChanged(int& rotation) {
 }
 
 void ofApp::modelZrotationChanged(int& rotation) {
-    int step = 15; 
+    int step = 5; 
     int newRotation = ((rotation + step / 2) / step) * step; 
     if (newRotation != rotation) {
         rotateZ.removeListener(this, &ofApp::modelZrotationChanged);
@@ -290,7 +309,10 @@ void ofApp::modelZrotationChanged(int& rotation) {
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key) {
-
+    if (key == OF_KEY_ALT) {
+        altPressed = false;
+        cam.disableMouseInput(); 
+    }
 }
 
 //--------------------------------------------------------------
@@ -300,7 +322,22 @@ void ofApp::mouseMoved(int x, int y) {
 
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button) {
-    
+    if (isDragging && draggableModel && !altPressed) {
+        std::string modelType = draggableModel->getType(); 
+
+        if (modelType == "zftbase") {
+           
+        }
+        else if (modelType == "TypeB") {
+            ofVec3f newPos = cam.screenToWorld(ofVec3f(x, y) + dragOffset);
+            draggableModel->setPosition(newPos);
+        }
+        else{
+            ofVec3f newPos = cam.screenToWorld(ofVec3f(x, y) + dragOffset);
+            draggableModel->setPosition(newPos);
+        }
+        
+    }
 }
 
 
@@ -310,7 +347,6 @@ void ofApp::mousePressed(int x, int y, int button) {
     float closestDist = std::numeric_limits<float>::max();
     int closestIndex = -1;
 
-    // 遍历所有模型，找到最接近点击点的模型
     for (int i = 0; i < models.size(); i++) {
         ofVec3f modelScreenPos = cam.worldToScreen(models[i]->getPosition());
         float dist = modelScreenPos.distance(screenPoint);
@@ -320,22 +356,115 @@ void ofApp::mousePressed(int x, int y, int button) {
         }
     }
     if (closestIndex != -1) {
-        selectedModel = models[closestIndex];           
+        selectedModel = models[closestIndex];         
+        updateSelectedModel(selectedModel);
+        isDragging = true;
+        draggableModel = selectedModel;
+        dragOffset = cam.worldToScreen(draggableModel->getPosition()) - screenPoint;
     }
     else {
         std::cout << "No model selected." << std::endl;
-        selectedModel = nullptr;        
+        selectedModel = nullptr;     
+        isDragging = false;
     }
 }
 
 
-
-
 //--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button) {
-    
+void ofApp::mouseReleased(int x, int y, int button) {    
+    ofVec3f axis;
+    ofVec3f xaxis = ofVec3f(1, 0, 0);
+    ofVec3f yaxis = ofVec3f(0, 1, 0);
+    ofVec3f zaxis = ofVec3f(0, 0, 1);
 
+    if (isDragging && draggableModel) {
+        isDragging = false;
+
+        std::vector<ofVec3f> presetPositions;
+        std::string modelType = draggableModel->getType(); 
+
+        if (spr == true && modelType == "loop") {
+            presetPositions = { ofVec3f(-25.0f, 0.0f, 0.0f), ofVec3f(26.0f, 0.0f, 0.0f), ofVec3f(0.0f, 29.0f, 0.0f), ofVec3f(0.0f, -29.0f, 0.0f) };
+        }
+        else if (sphere == true && modelType == "loop") {
+            presetPositions = { ofVec3f(-30.0f, 0.0f, 0.0f), ofVec3f(30.0f, 0.0f, 0.0f), ofVec3f(0.0f, 32.0f, 0.0f), ofVec3f(0.0f, -32.0f, 0.0f) };
+
+        }
+        else if (sphere == true && modelType == "rabear") {
+            presetPositions = { ofVec3f(-30.0f, 0.0f, 0.0f), ofVec3f(30.0f, 0.0f, 0.0f), ofVec3f(0.0f, 32.0f, 0.0f), ofVec3f(0.0f, -32.0f, 0.0f) };
+
+        }
+        else if (spr == true && modelType == "rabear") {
+            presetPositions = { ofVec3f(-25.0f, 0.0f, 0.0f), ofVec3f(25.0f, 0.0f, 0.0f), ofVec3f(0.0f, 27.0f, 0.0f), ofVec3f(0.0f, -27.0f, 0.0f) };
+
+        }
+        else{
+            presetPositions = {};
+
+        }
+
+        if (!presetPositions.empty()) {
+            ofVec3f currentPos = draggableModel->getPosition();
+            float minDistance = std::numeric_limits<float>::max();
+            int closestIndex = -1;
+
+            for (int i = 0; i < presetPositions.size(); i++) {
+                float distance = currentPos.distance(presetPositions[i]);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestIndex = i;
+                }
+            }
+            if (closestIndex != -1 && altPressed == false) {
+                draggableModel->setPosition(presetPositions[closestIndex]);
+                if (modelType == "loop") {
+                    if (closestIndex == 0) { 
+                        draggableModel->setRotation(180, yaxis);
+                        draggableModel->setRotation(0, zaxis);
+                        draggableModel->setDirection("left");
+                    }
+                    else if (closestIndex == 1) {
+                        draggableModel->setRotation(0, yaxis);
+                        draggableModel->setRotation(0, zaxis);
+                        draggableModel->setDirection("right");
+                    }
+                    else if (closestIndex == 2) {
+                        draggableModel->setRotation(90, zaxis);
+                        draggableModel->setDirection("up");
+                    }
+                    else if (closestIndex == 3) {
+                        draggableModel->setRotation(-90, zaxis);
+                        draggableModel->setDirection("down");
+                    }
+                }
+                else if (modelType == "rabear") {
+                    if (closestIndex == 0) { 
+                        draggableModel->setRotation(90, zaxis);
+                        draggableModel->setRotation(0, yaxis);
+                        draggableModel->setDirection("left");
+                    }
+                    else if (closestIndex == 1) {
+                        draggableModel->setRotation(-90, zaxis);
+                        draggableModel->setRotation(0, yaxis);
+                        draggableModel->setDirection("right");
+                    }
+                    else if (closestIndex == 2) {
+                        draggableModel->setRotation(0, zaxis);
+                        draggableModel->setDirection("up");
+                    }
+                    else if (closestIndex == 3) {
+                        draggableModel->setRotation(180, zaxis);
+                        //draggableModel->setRotation(0, zaxis);
+                        draggableModel->setDirection("down");
+                    }
+                }
+                
+            }
+        }
+    }
 }
+
+
 
 //--------------------------------------------------------------
 void ofApp::mouseEntered(int x, int y) {
@@ -362,3 +491,35 @@ void ofApp::dragEvent(ofDragInfo dragInfo) {
 
 }
 
+void ofApp::updateSelectedModel(std::shared_ptr<Model> newModel) {
+    selectedModel = newModel; 
+
+    if (selectedModel) {
+        std::string modelType = selectedModel->getType(); 
+       
+        if (modelType == "cube") {
+            rotateX.setMin(0);
+            rotateX.setMax(360);            
+        }
+        else if (modelType == "loop") {
+            rotateX.setMin(-30);
+            rotateX.setMax(30);
+            rotateY.setMin(-30);
+            rotateY.setMax(30); 
+            rotateZ.setMin(-15); 
+            rotateZ.setMax(15);
+        }
+        else if (modelType == "rabear") {
+            rotateX.setMin(-180);
+            rotateX.setMax(180);
+            rotateY.setMin(-180);
+            rotateY.setMax(180);
+            rotateZ.setMin(-180);
+            rotateZ.setMax(180);
+        }
+        else {
+            rotateX.setMin(-360);
+            rotateX.setMax(360);
+        }
+    }
+}

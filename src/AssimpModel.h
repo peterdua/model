@@ -8,6 +8,7 @@ class AssimpModel : public Model {
 public:
     AssimpModel() {}
     virtual ~AssimpModel() {}   
+    AssimpModel(std::string type) : Model(type) {}
 
 
     ofxAssimpModelLoader modelLoader;

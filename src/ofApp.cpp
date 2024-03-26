@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup() {
     ofSetLogLevel(OF_LOG_NOTICE);
-    cam.disableMouseInput(); // 初始时禁用，只有在按下Alt时才启用
+    cam.disableMouseInput(); // 初始时禁用，只有在按下Alt时才启用    
 
     cam.setPosition(ofVec3f(0, 0, 50)); 
 
@@ -11,7 +11,8 @@ void ofApp::setup() {
     guiModel.add(cubeButton.setup("Cube"));
     guiModel.add(sphereButton.setup("Sphere"));
     guiModel.add(sphrEarButton.setup("Rabbit ear"));
-    guiModel.add(loopButton.setup("Rabbit ear"));
+    guiModel.add(leftCatEarButton.setup("Cat ear"));
+    guiModel.add(loopButton.setup("Loop"));
     guiModel.add(modelSize.set("Size",10,1,50));
     guiModel.setPosition(10, 10); 
 
@@ -38,6 +39,7 @@ void ofApp::setup() {
     loopButton.addListener(this, &ofApp::loadLoopButtonPressed);
     loadModelButton.addListener(this, &ofApp::loadModelButtonPressed);
     modelSize.addListener(this, &ofApp::modelSizeChanged);
+    leftCatEarButton.addListener(this, &ofApp::catEarButtonPressed);
 
     loadBasemodelButton.addListener(this, &ofApp::loadBasemodelButtonPressed);
     loadSphrBasemodelButton.addListener(this, &ofApp::loadSphrBasemodelButtonPressed);
@@ -108,7 +110,16 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) { 
-    keyHandler.handleKeyPress(selectedModel, key, models, mainModel, spr, sphere);      
+    if (ear) {
+        pos2 = rightEarModel->getPosition();
+        pos3 = leftEarModel->getPosition();
+    }
+
+    keyHandler.handleKeyPress(selectedModel, key, models, mainModel, spr, sphere, pos2);      
+    if (selectedModel->getType() == "leftcatear")
+    {
+        rightEarModel->setPosition(pos2);
+    }
 
     switch (key) {
     case OF_KEY_ALT:
@@ -129,9 +140,14 @@ void ofApp::keyPressed(int key) {
             else if (selectedModel->getType() == "yuanbase") {
                 sphere = false;
             }
+            else if (selectedModel->getType() == "leftcatear" || "rightcatear") {
+                ear = false;
+            }
             mainModel->removePart(selectedModel);
             selectedModel.reset(); 
             hasBaseModel = false;
+
+
             
             ofLogNotice() << "Selected model deleted.";
         }
@@ -203,7 +219,7 @@ void ofApp::loadSphrBasemodelButtonPressed() {
     }
     std::shared_ptr<AssimpModel> newAssimpModel = std::make_shared<AssimpModel>("yuanbase");
     //std::string modelPath = "smpsphrbase.stl";
-    std::string modelPath = "yuanbase.stl";
+    std::string modelPath = "softv1.stl";
     if (newAssimpModel->loadModel(modelPath)) {
         newAssimpModel->adMeshes();
         models.push_back(newAssimpModel);
@@ -263,6 +279,38 @@ void ofApp::loadLoopButtonPressed() {
     }
     else {
         ofLogError("AssimpModelButtonPressed") << "Failed to load model: " << modelPath;
+    }
+}
+
+void ofApp::catEarButtonPressed() {    
+    ear = true;
+    rightEarModel = std::make_shared<AccessoryModel>("rightcatear");
+    std::string rightEar = "rightcatear.stl";
+    if (rightEarModel->loadModel(rightEar)) {
+        rightEarModel->adMeshes();
+        models.push_back(rightEarModel);
+        mainModel->addPart(rightEarModel);        
+
+        ofVec3f leftPosition = ofVec3f(23.0f, 18.0f, 0.0f); 
+        rightEarModel->setPosition(leftPosition);
+    }
+    else {
+        ofLogError("catEarButtonPressed") << "Failed to load left ear model: " << rightEarModel;
+    }
+
+    
+    leftEarModel = std::make_shared<AccessoryModel>("leftcatear");
+    std::string rightModelPath = "leftcatear.stl";
+    if (leftEarModel->loadModel(rightModelPath)) {
+        leftEarModel->adMeshes();
+        models.push_back(leftEarModel);
+        mainModel->addPart(leftEarModel);        
+
+        ofVec3f rightPosition = ofVec3f(-23.0f, 18.0f, .0f); 
+        leftEarModel->setPosition(rightPosition);
+    }
+    else {
+        ofLogError("catEarButtonPressed") << "Failed to load right ear model: " << leftEarModel;
     }
 }
 
@@ -332,6 +380,9 @@ void ofApp::mouseDragged(int x, int y, int button) {
             ofVec3f newPos = cam.screenToWorld(ofVec3f(x, y) + dragOffset);
             draggableModel->setPosition(newPos);
         }
+        else if (modelType == "yuanbase") {
+            
+        }
         else{
             ofVec3f newPos = cam.screenToWorld(ofVec3f(x, y) + dragOffset);
             draggableModel->setPosition(newPos);
@@ -381,13 +432,14 @@ void ofApp::mouseReleased(int x, int y, int button) {
         isDragging = false;
 
         std::vector<ofVec3f> presetPositions;
+        std::vector<ofVec3f> presetPositions2;
         std::string modelType = draggableModel->getType(); 
 
         if (spr == true && modelType == "loop") {
-            presetPositions = { ofVec3f(-25.0f, 0.0f, 0.0f), ofVec3f(26.0f, 0.0f, 0.0f), ofVec3f(0.0f, 29.0f, 0.0f), ofVec3f(0.0f, -29.0f, 0.0f) };
+            presetPositions = { ofVec3f(-23.0f, 0.0f, 0.0f), ofVec3f(26.0f, 0.0f, 0.0f), ofVec3f(0.0f, 29.0f, 0.0f), ofVec3f(0.0f, -29.0f, 0.0f) };
         }
         else if (sphere == true && modelType == "loop") {
-            presetPositions = { ofVec3f(-30.0f, 0.0f, 0.0f), ofVec3f(30.0f, 0.0f, 0.0f), ofVec3f(0.0f, 32.0f, 0.0f), ofVec3f(0.0f, -32.0f, 0.0f) };
+            presetPositions = { ofVec3f(-31.5f, -2.0f, 0.0f), ofVec3f(30.0f, -2.0f, 0.0f), ofVec3f(0.0f, 24.0f, 0.0f), ofVec3f(0.0f, -25.5f, 0.0f) };
 
         }
         else if (sphere == true && modelType == "rabear") {
@@ -396,6 +448,17 @@ void ofApp::mouseReleased(int x, int y, int button) {
         }
         else if (spr == true && modelType == "rabear") {
             presetPositions = { ofVec3f(-25.0f, 0.0f, 0.0f), ofVec3f(25.0f, 0.0f, 0.0f), ofVec3f(0.0f, 27.0f, 0.0f), ofVec3f(0.0f, -27.0f, 0.0f) };
+
+        }
+        else if (sphere == true && modelType == "leftcatear") {
+            presetPositions = { ofVec3f(-28.0f, -11.0f, 0.0f), ofVec3f(28.0f, 11.0f, 0.0f), ofVec3f(-20.0f, 20.0f, 0.0f), ofVec3f(20.0f, -21.0f, 0.0f) };
+            presetPositions2 = { ofVec3f(-28.0f, 11.0f, 0.0f), ofVec3f(28.0f, -13.0f, 0.0f), ofVec3f(18.5f, 20.0f, 0.0f), ofVec3f(-20.0f, -21.0f, 0.0f) };
+
+        }
+        else if (sphere == true && modelType == "rightcatear") {
+            presetPositions = { ofVec3f(-28.0f, 11.0f, 0.0f), ofVec3f(28.0f, -13.0f, 0.0f), ofVec3f(18.5f, 19.0f, 0.0f), ofVec3f(-20.0f, -21.0f, 0.0f) };
+            presetPositions2 = { ofVec3f(-28.0f, -13.0f, 0.0f), ofVec3f(28.0f, 11.0f, 0.0f), ofVec3f(-20.0f, 19.0f, 0.0f), ofVec3f(20.0f, -21.0f, 0.0f) };
+
 
         }
         else{
@@ -417,6 +480,9 @@ void ofApp::mouseReleased(int x, int y, int button) {
             }
             if (closestIndex != -1 && altPressed == false) {
                 draggableModel->setPosition(presetPositions[closestIndex]);
+                auto& otherEarModel = (modelType == "leftcatear") ? getRightEarModel() : getLeftEarModel();
+                otherEarModel->setPosition(presetPositions2[closestIndex]);
+
                 if (modelType == "loop") {
                     if (closestIndex == 0) { 
                         draggableModel->setRotation(180, yaxis);
@@ -457,7 +523,70 @@ void ofApp::mouseReleased(int x, int y, int button) {
                         //draggableModel->setRotation(0, zaxis);
                         draggableModel->setDirection("down");
                     }
+                }  
+                else if (modelType == "leftcatear") {
+                    if (closestIndex == 0) {
+                        draggableModel->setRotation(90, zaxis);
+                        draggableModel->setRotation(0, yaxis);   
+
+                        otherEarModel->setRotation(90, zaxis);
+                        otherEarModel->setRotation(0, yaxis);
+                        draggableModel->setDirection("left");
+                    }
+                    else if (closestIndex == 1) {
+                        draggableModel->setRotation(-90, zaxis);
+                        draggableModel->setRotation(0, yaxis);
+
+                        otherEarModel->setRotation(-90, zaxis);
+                        otherEarModel->setRotation(0, yaxis);
+                        draggableModel->setDirection("right");
+                    }
+                    else if (closestIndex == 2) {
+                        draggableModel->setRotation(0, zaxis);
+
+                        otherEarModel->setRotation(0, zaxis);
+                        draggableModel->setDirection("up");
+                    }
+                    else if (closestIndex == 3) {
+                        draggableModel->setRotation(180, zaxis);
+
+                        otherEarModel->setRotation(180, zaxis);
+                        //draggableModel->setRotation(0, zaxis);                       
+                        draggableModel->setDirection("down");
+                    }
                 }
+                else if (modelType == "rightcatear") {
+                    if (closestIndex == 0) {
+                        draggableModel->setRotation(90, zaxis);
+                        draggableModel->setRotation(0, yaxis);
+
+                        otherEarModel->setRotation(90, zaxis);
+                        otherEarModel->setRotation(0, yaxis);
+                        draggableModel->setDirection("left");
+                    }
+                    else if (closestIndex == 1) {
+                        draggableModel->setRotation(-90, zaxis);
+                        draggableModel->setRotation(0, yaxis);
+
+                        otherEarModel->setRotation(-90, zaxis);
+                        otherEarModel->setRotation(0, yaxis);
+                        draggableModel->setDirection("right");
+                    }
+                    else if (closestIndex == 2) {
+                        draggableModel->setRotation(0, zaxis);
+
+                        otherEarModel->setRotation(0, zaxis);
+                        draggableModel->setDirection("up");
+                    }
+                    else if (closestIndex == 3) {
+                        draggableModel->setRotation(180, zaxis);
+
+                        otherEarModel->setRotation(180, zaxis);
+                        //draggableModel->setRotation(0, zaxis);                       
+                        draggableModel->setDirection("down");
+                    }
+                }
+                
                 
             }
         }
@@ -522,4 +651,12 @@ void ofApp::updateSelectedModel(std::shared_ptr<Model> newModel) {
             rotateX.setMax(360);
         }
     }
+}
+
+std::shared_ptr<AccessoryModel> ofApp::getLeftEarModel() {
+    return leftEarModel;
+}
+
+std::shared_ptr<AccessoryModel> ofApp::getRightEarModel() {
+    return rightEarModel;
 }

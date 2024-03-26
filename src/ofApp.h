@@ -39,6 +39,10 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void updateSelectedModel(std::shared_ptr<Model> newModel);
 
+	std::shared_ptr<AccessoryModel> getLeftEarModel();
+
+	std::shared_ptr<AccessoryModel> getRightEarModel();
+
 	void gotMessage(ofMessage msg);
 	
 	// GUIÔªËØ
@@ -53,6 +57,7 @@ public:
 	ofxButton cubeButton;
 	ofxButton sphereButton;
 	ofxButton sphrEarButton;
+	ofxButton leftCatEarButton;
 	ofxButton loopButton;
 	ofxButton loadModelButton;
 	ofxButton loadBasemodelButton;
@@ -92,6 +97,7 @@ public:
 	void loadBasemodelButtonPressed();
 	void loadSphrBasemodelButtonPressed();
 	void loadSphrCovermodelButtonPressed();
+	void catEarButtonPressed();
 
 	void loadSphrrabEarButtonPressed();
 	void loadLoopButtonPressed();
@@ -103,6 +109,12 @@ public:
 	std::vector<std::shared_ptr<Model>> models;
 	std::shared_ptr<Model> selectedModel = nullptr;
 	std::shared_ptr<Model> mainModel = std::make_shared<Model>(); 
+	std::shared_ptr<AccessoryModel> leftEarModel;
+	std::shared_ptr<AccessoryModel> rightEarModel;
+
+	ofVec3f pos2;
+	ofVec3f pos3;
+	bool ear = false;
 	bool isDragging = false;
 	ofVec3f dragOffset; 
 	std::shared_ptr<Model> draggableModel;

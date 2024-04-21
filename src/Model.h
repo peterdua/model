@@ -8,7 +8,7 @@
 
 
 
-class Model {
+class Model {   
 
 private:
     std::string type;
@@ -20,6 +20,8 @@ public:
     Model(std::string type) : type(type) {}
 
     void exportModelToSTL(const std::string& filePath);
+    bool isWireframeMode = false;
+    ofMaterial material;
 
     virtual void draw() const;
     void Model::addPart(std::shared_ptr<Model> part);
@@ -45,7 +47,9 @@ public:
     virtual bool loadModel(const std::string& filepath) {      
         return false;
     }
-
+    void toggleWireframeMode() {
+        isWireframeMode = !isWireframeMode;
+    }
 
     const ofMesh& getMesh() const {
         return mesh;
@@ -59,6 +63,14 @@ public:
         //    ofLogNotice("Model::printMeshInfo") << "一个部件的Mesh顶点数: " << mesh.getNumVertices();
         
     }
+    void setupMaterial() {
+        
+        material.setDiffuseColor(ofColor(255, 0, 0)); 
+
+        material.setSpecularColor(ofColor(255, 255, 255)); 
+
+        material.setShininess(64); 
+    }
     void setDirection(const std::string& dir) {
         direction = dir;
     }
@@ -70,7 +82,7 @@ public:
 protected:
     ofVec3f position;
     ofVec3f rotation; 
-    ofMesh combinedMesh; // 用于存储组合后的网格
+    ofMesh combinedMesh; 
     ofMesh meshes;
     ofMesh mesh; 
     //ofxAssimpModelLoader modelLoader;

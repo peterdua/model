@@ -1,20 +1,17 @@
-#include "assimpmodel.h"
 
-void AssimpModel::adMeshes() {
-    mesh.clear(); 
+#include "EarModel.h"
 
+void EarModel::adMeshes() {
+    mesh.clear();
     for (int i = 0; i < modelLoader.getNumMeshes(); i++) {
         ofMesh tempMesh = modelLoader.getMesh(i);
-
         if (tempMesh.getNumIndices() % 3 == 0) {
-          
             for (int j = 0; j < tempMesh.getNumVertices(); j++) {
                 mesh.addVertex(tempMesh.getVertex(j));
-                if (tempMesh.hasNormals()) { 
+                if (tempMesh.hasNormals()) {
                     mesh.addNormal(tempMesh.getNormal(j));
                 }
             }
-           
             for (int k = 0; k < tempMesh.getNumIndices(); k++) {
                 mesh.addIndex(tempMesh.getIndex(k));
             }
@@ -25,9 +22,7 @@ void AssimpModel::adMeshes() {
     }
 }
 
-
-
-void AssimpModel:: draw()const {
+void EarModel::draw()const {
     material.begin();
     ofPushMatrix();
     ofTranslate(position);

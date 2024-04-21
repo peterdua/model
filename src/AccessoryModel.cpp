@@ -23,17 +23,22 @@ void AccessoryModel::adMeshes() {
 }
 
 void AccessoryModel::draw()const {
-    ofxAssimpModelLoader& loader = const_cast<ofxAssimpModelLoader&>(modelLoader);
-
+    material.begin();
     ofPushMatrix();
     ofTranslate(position);
     ofRotateX(rotation.x);
     ofRotateY(rotation.y);
     ofRotateZ(rotation.z);
 
-    mesh.drawWireframe();
+    if (isWireframeMode) {
+        mesh.drawWireframe();
+    }
+    else {
+        mesh.draw();
+    }
 
     ofPopMatrix();
+    material.end();
 }
 
 //int calculateInternalVertices(const ofMesh& accessoryMesh, const BoundingBox& baseModelBox) {

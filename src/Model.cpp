@@ -5,6 +5,7 @@ void Model::setPosition(const ofVec3f& pos) {
 }
 
 ofVec3f Model::getPosition() const {
+
     return position;
 }
 float Model::getRotationX() const {
@@ -123,16 +124,16 @@ void Model::exportModelToSTL(const std::string& filePath) {
 
     auto& vertices = combinedMesh.getVertices();
     auto& indices = combinedMesh.getIndices();
-    ofLogNotice("Model::addMesh") << "Combined mesh now has " << vertices.size() << " vertices and " << indices.size() << " indices.";
+   // ofLogNotice("Model::addMesh") << "Combined mesh now has " << vertices.size() << " vertices and " << indices.size() << " indices.";
 
     if (indices.size() % 3 != 0) {
-        ofLogError() << "Combined mesh has invalid index count. Cannot export.";
+        //ofLogError() << "Combined mesh has invalid index count. Cannot export.";
         return; 
     }
 
     for (size_t i = 0; i < indices.size(); i += 3) {
         if (indices[i] >= vertices.size() || indices[i + 1] >= vertices.size() || indices[i + 2] >= vertices.size()) {
-            ofLogError() << "Index out of range. Skipping invalid triangle.";
+            //ofLogError() << "Index out of range. Skipping invalid triangle.";
             continue; 
         }
 
@@ -142,7 +143,7 @@ void Model::exportModelToSTL(const std::string& filePath) {
 
         ofPoint normal = ((vert2 - vert1).cross(vert3 - vert1)).normalized();
 
-        ofLogNotice() << "顶点1: " << vert1 << ", 顶点2: " << vert2 << ", 顶点3: " << vert3 << ", 法线: " << normal;
+       // ofLogNotice() << "顶点1: " << vert1 << ", 顶点2: " << vert2 << ", 顶点3: " << vert3 << ", 法线: " << normal;
 
         stlExporter.addTriangle(vert1, vert2, vert3, normal);
     }
@@ -154,15 +155,21 @@ void Model::exportModelToSTL(const std::string& filePath) {
 }
 
 void Model::draw() const {
-   
+    material.begin();
     ofPushMatrix();
     ofTranslate(position);
     ofRotateX(rotation.x);
     ofRotateY(rotation.y);
     ofRotateZ(rotation.z);
-    combinedMesh.drawWireframe(); 
+    if (isWireframeMode) {
+        combinedMesh.drawWireframe();
+    }
+    else {
+        combinedMesh.draw();
+    }
 
     ofPopMatrix();
+    material.end();
 }
 
 

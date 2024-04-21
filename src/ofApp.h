@@ -14,6 +14,9 @@
 #include "KeyHandler.h"
 #include <memory> 
 #include <vector>
+#include "EarModel.h"
+#include "ofTrueTypeFont.h"
+
 
 
 
@@ -39,11 +42,14 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void updateSelectedModel(std::shared_ptr<Model> newModel);
 
-	std::shared_ptr<AccessoryModel> getLeftEarModel();
+	std::shared_ptr<EarModel> getLeftEarModel();
 
-	std::shared_ptr<AccessoryModel> getRightEarModel();
+	std::shared_ptr<EarModel> getRightEarModel();
 
 	void gotMessage(ofMessage msg);
+
+	ofTrueTypeFont myFont;
+	ofTrueTypeFont myFont20;
 	
 	// GUIÔªËØ
 	ofxPanel guiModel; 
@@ -58,6 +64,13 @@ public:
 	ofxButton sphereButton;
 	ofxButton sphrEarButton;
 	ofxButton leftCatEarButton;
+	ofxButton catFoot;
+	ofxButton tealDragonwing;
+	ofxButton batWings;
+	ofxButton butterflyWings;
+	ofxButton horn;
+	ofxButton rabbitear;
+
 	ofxButton loopButton;
 	ofxButton loadModelButton;
 	ofxButton loadBasemodelButton;
@@ -69,7 +82,9 @@ public:
 	ofParameter <int>rotateY;
 	ofParameter <int>rotateZ;
 
+	ofLight pointLight;
 
+	EarModel* earModel;
 	
 	std::vector<ofBoxPrimitive> cubes;	
 	int selectedCubeIndex = -1; 
@@ -98,6 +113,12 @@ public:
 	void loadSphrBasemodelButtonPressed();
 	void loadSphrCovermodelButtonPressed();
 	void catEarButtonPressed();
+	void catFootButtonPressed();
+	void tealDragonwingButtonPressed();
+	void batWingsButtonPressed();
+	void butterflyWingsButtonPressed();
+	void hornButtonPressed();
+	void rabbitearButtonPressed();
 
 	void loadSphrrabEarButtonPressed();
 	void loadLoopButtonPressed();
@@ -109,12 +130,39 @@ public:
 	std::vector<std::shared_ptr<Model>> models;
 	std::shared_ptr<Model> selectedModel = nullptr;
 	std::shared_ptr<Model> mainModel = std::make_shared<Model>(); 
-	std::shared_ptr<AccessoryModel> leftEarModel;
-	std::shared_ptr<AccessoryModel> rightEarModel;
+	std::shared_ptr<EarModel> leftEarModel;
+	std::shared_ptr<EarModel> rightEarModel;
+	std::shared_ptr<EarModel> catfootl;
+	std::shared_ptr<EarModel> catfootr;
+	std::shared_ptr<EarModel> tealwingl;
+	std::shared_ptr<EarModel> tealwingr;
+	std::shared_ptr<EarModel> batwingl;
+	std::shared_ptr<EarModel> batwingr;
+	std::shared_ptr<EarModel> butterwingr;
+	std::shared_ptr<EarModel> butterwingl;
+	std::shared_ptr<EarModel> hornl;
+	std::shared_ptr<EarModel> hornr;
+	std::shared_ptr<EarModel> rabearl;
+	std::shared_ptr<EarModel> rabearr;
+
 
 	ofVec3f pos2;
-	ofVec3f pos3;
+	ofVec3f pos;
+	ofVec3f pos4;
+	ofVec3f pos5;
+	ofVec3f pos6;
+	ofVec3f pos7;
+	ofVec3f pos8;
+	ofVec3f pos9;
+	ofVec3f pos10;
+	ofVec3f pos11;
+	ofVec3f pos12;
+	ofVec3f pos13;
+	ofVec3f pos14;
+	ofVec3f pos15;
 	bool ear = false;
+	bool catfoot = false;
+	bool tealwing = false;
 	bool isDragging = false;
 	ofVec3f dragOffset; 
 	std::shared_ptr<Model> draggableModel;

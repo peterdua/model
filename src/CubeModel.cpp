@@ -73,7 +73,12 @@ void CubeModel::draw() const {
     ofRotateX(rotation.x);
     ofRotateY(rotation.y);
     ofRotateZ(rotation.z);
-    mesh.draw();
+    if (isWireframeMode) {
+        mesh.drawWireframe();
+    }
+    else {
+        mesh.draw();
+    }
     ofPopMatrix();
 }
 
